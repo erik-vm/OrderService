@@ -1,0 +1,31 @@
+plugins {
+    id 'war'
+    id 'org.gretty' version '4.1.5'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+
+    testImplementation libs.junit
+
+    implementation libs.guava
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+gretty {
+    contextPath = '/'
+}
+
+
+
+
