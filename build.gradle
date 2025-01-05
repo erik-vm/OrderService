@@ -19,6 +19,11 @@ dependencies {
             name: 'postgresql',
             version: '42.7.3'
 
+    implementation group: 'org.apache.commons',
+            name: 'commons-dbcp2',
+            version: '2.12.0'
+
+
     compileOnly 'org.projectlombok:lombok:1.18.34'
 
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
