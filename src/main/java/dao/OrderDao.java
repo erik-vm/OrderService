@@ -122,8 +122,23 @@ public class OrderDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
+
+    public boolean deleteOrderById(Long id) {
+
+        String sql = "delete from \"orders\" where id = (?)";
+
+        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+            int i = ps.executeUpdate();
+            return i > 0;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private void addOrderLine(long id, OrderLine orderLine) {
         String sql = "insert into \"order_lines\" (order_id, description, price) values (?, ?, ?)";
