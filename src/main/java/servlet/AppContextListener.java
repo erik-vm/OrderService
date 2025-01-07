@@ -2,6 +2,7 @@ package servlet;
 
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.annotation.WebListener;
 import util.ConfigUtil;
 import util.ConnectionInfo;
@@ -19,6 +20,10 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+
+        ServletRegistration.Dynamic bulkServlet = sce.getServletContext().addServlet("OrderBulkServlet", new OrdersBulkServlet());
+        bulkServlet.addMapping("/api/orders/bulk");
+
         ConnectionInfo connectionInfo = ConfigUtil.readConnectionInfo();
         DataSourceProvider.setConnectionInfo(connectionInfo);
         DataSource dataSource = DataSourceProvider.getDataSource();
