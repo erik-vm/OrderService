@@ -1,18 +1,13 @@
 package servlet;
 
+import config.Config;
+import config.HsqlDataSource;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.annotation.WebListener;
-import util.ConfigUtil;
-import util.ConnectionInfo;
-import util.DataSourceProvider;
-import util.FileUtil;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 @WebListener
 public class AppContextListener implements ServletContextListener {
@@ -21,22 +16,12 @@ public class AppContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
 
+        var ctx = new AnnotationConfigApplicationContext(Config.class, HsqlDataSource.class);
+        ServletContext context = sce.getServletContext();
+        context.setAttribute("context", ctx);
+
         ServletRegistration.Dynamic bulkServlet = sce.getServletContext().addServlet("OrderBulkServlet", new OrdersBulkServlet());
         bulkServlet.addMapping("/api/orders/bulk");
 
-        ConnectionInfo connectionInfo = ConfigUtil.readConnectionInfo();
-        DataSourceProvider.setConnectionInfo(connectionInfo);
-        DataSource dataSource = DataSourceProvider.getDataSource();
-        try (Connection conn = dataSource.getConnection(); Statement stmt = conn.createStatement()) {
-
-            String schema = FileUtil.readFileFromClasspath("schema.sql");
-            String data = FileUtil.readFileFromClasspath("data.sql");
-
-            stmt.executeUpdate(schema);
-            stmt.executeUpdate(data);
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

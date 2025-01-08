@@ -7,6 +7,12 @@ repositories {
     mavenCentral()
 }
 
+def springVersion = '6.1.13'
+def log4jVersion = '2.23.1'
+def lombokVersion = '1.18.34'
+def postgresVersion = '42.7.3'
+def hsqldbVersion = '2.7.3'
+
 dependencies {
 
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.1.0'
@@ -17,16 +23,40 @@ dependencies {
 
     implementation group: 'org.postgresql',
             name: 'postgresql',
-            version: '42.7.3'
+            version: postgresVersion
+
+    implementation group: 'org.hsqldb',
+            name: 'hsqldb',
+            version: hsqldbVersion
 
     implementation group: 'org.apache.commons',
             name: 'commons-dbcp2',
             version: '2.12.0'
 
+    implementation group: 'org.springframework',
+            name: 'spring-context',
+            version: springVersion
 
-    compileOnly 'org.projectlombok:lombok:1.18.34'
+    implementation group: 'org.springframework',
+            name: 'spring-jdbc',
+            version: springVersion
 
-    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    compileOnly group: 'org.projectlombok',
+            name: 'lombok',
+            version: lombokVersion
+
+    annotationProcessor group: 'org.projectlombok',
+            name: 'lombok',
+            version: lombokVersion
+
+    implementation group: 'org.apache.logging.log4j',
+            name: 'log4j-api',
+            version: log4jVersion
+
+    implementation group: 'org.apache.logging.log4j',
+            name: 'log4j-core',
+            version: log4jVersion
+
 
     testImplementation libs.junit
 

@@ -2,11 +2,13 @@ package servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dao.OrderDao;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Order;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import util.ConnectionPoolFactory;
 
 import javax.sql.DataSource;
@@ -16,16 +18,21 @@ import java.util.List;
 @WebServlet("/api/orders")
 public class OrderServlet extends HttpServlet {
 
-    DataSource pool = new ConnectionPoolFactory().createConnectionPool();
-    OrderDao dao = new OrderDao(pool);
-
+    private AnnotationConfigApplicationContext annotationConfigApplicationContext;
     ObjectMapper mapper = new ObjectMapper();
+
+    @Override
+    public void init() {
+        ServletContext context = getServletContext();
+        this.annotationConfigApplicationContext = (AnnotationConfigApplicationContext) context.getAttribute("context");
+    }
+
 
     @Override
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response)
             throws IOException {
-
+        OrderDao dao = annotationConfigApplicationContext.getBean(OrderDao.class);
         response.setContentType("application/json");
 
         if (request.getParameterMap().containsKey("id")) {
@@ -47,7 +54,7 @@ public class OrderServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
+        OrderDao dao = annotationConfigApplicationContext.getBean(OrderDao.class);
         Order order = mapper.readValue(req.getInputStream(), Order.class);
 
         Order savedOrder = dao.insertOrder(order);
@@ -61,13 +68,13 @@ public class OrderServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
+        OrderDao dao = annotationConfigApplicationContext.getBean(OrderDao.class);
         resp.setContentType("application/json");
 
         if (req.getParameterMap().containsKey("id")) {
             long id = Long.parseLong(req.getParameter("id"));
 
-            boolean deleteSuccessful = dao.deleteOrderById(id);
+            boolean deleteSuccessful = dao.deleteOrderById(id) != 0;
 
             if (deleteSuccessful) {
                 resp.setStatus(HttpServletResponse.SC_OK);

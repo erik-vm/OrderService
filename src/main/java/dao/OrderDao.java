@@ -2,159 +2,107 @@ package dao;
 
 import model.Order;
 import model.OrderLine;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
+@Repository
 public class OrderDao {
 
-    private final DataSource dataSource;
+    private final JdbcClient client;
 
-    public OrderDao(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public OrderDao(JdbcClient client) {
+        this.client = client;
     }
 
-
     public Order insertOrder(Order order) {
+        if (order == null || order.getOrderNumber() == null || order.getOrderLines() == null) {
+            throw new IllegalArgumentException("Order and required fields must not be null");
+        }
+        try {
+            String sql = "insert into orders (order_number) values ( ?)";
 
-        String sql = "insert into \"orders\" (order_number) values (?)";
+            KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, new String[]{"id"})) {
+            client.sql(sql)
+                    .param(order.getOrderNumber())
+                    .update(keyHolder, "id");
 
-            ps.setString(1, order.getOrderNumber());
-            ps.executeUpdate();
+            long orderId = Objects.requireNonNull(keyHolder.getKey()).longValue();
 
-            ResultSet rs = ps.getGeneratedKeys();
-            if (!rs.next()) {
-                throw new RuntimeException("Key was not assigned to order!");
-            }
+            double total = 0.0;
 
-            long id = rs.getLong("id");
-
-            double sum = 0.0;
-            if (order.getOrderLines() != null && !order.getOrderLines().isEmpty()) {
+            if (!order.getOrderLines().isEmpty()) {
                 for (OrderLine orderLine : order.getOrderLines()) {
-                    sum += orderLine.getPrice();
-                    addOrderLine(id, orderLine);
+                    String description = orderLine.getDescription();
+                    double price = orderLine.getPrice();
+                    total += price;
+                    insertOrderLine(orderId, description, price);
                 }
             }
 
-            return new Order(rs.getLong("id"), order.getOrderNumber(), order.getOrderLines(), sum);
+            String updateTotalSql = "UPDATE orders SET total = ? WHERE id = ?";
+            client.sql(updateTotalSql)
+                    .param(total)
+                    .param(orderId)
+                    .update();
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            return order.withId(orderId).withTotal(total);
+        } catch (Exception e) {
+            throw new RuntimeException("Inserting new order failed!");
         }
-
     }
 
     public Order getOrderById(Long id) {
 
-        String sql = "select o.*, ol.* from \"orders\" o left join \"order_lines\" ol on o.id = ol.order_id where o.id = ?";
+        String sql = "select * from orders where orders.id = ?";
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        Order order = client.sql(sql).param(id).query(Order.class).single();
 
-            ps.setLong(1, id);
-            ResultSet rs = ps.executeQuery();
+        order.setOrderLines(getOrderLines(order.getId()));
 
-            Order order = null;
-            List<OrderLine> orderLines = new ArrayList<>();
-            double sum = 0.0;
-
-            while (rs.next()) {
-
-                if (order == null) {
-                    order = new Order();
-                    order.setId(rs.getLong("id"));
-                    order.setOrderNumber(rs.getString("order_number"));
-                    order.setOrderLines(orderLines);
-
-                }
-
-                String description = rs.getString("description");
-                if (description != null) {
-                    double price = rs.getDouble("price");
-                    sum += price;
-                    orderLines.add(new OrderLine(description, price));
-                }
-                order.setTotal(sum);
-            }
-            return order;
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return order;
     }
 
     public List<Order> getAllOrders() {
 
-        String sql = "select o.*, ol.* from \"orders\" o left join \"order_lines\" ol on o.id = ol.order_id";
+        String sql = "select * from orders;";
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery();) {
-
-            Map<Long, Order> orders = new HashMap<>();
-
-
-            while (rs.next()) {
-
-                long id = rs.getLong("id");
-
-                if (!orders.containsKey(id)) {
-                    Order order = new Order(id, rs.getString("order_number"), new ArrayList<>(), rs.getDouble("total"));
-                    orders.put(id, order);
-                }
-                String description = rs.getString("description");
-                if (description != null) {
-                    double price = rs.getDouble("price");
-                    orders.get(id).getOrderLines().add(new OrderLine(description, price));
-                }
-            }
-
-            return new ArrayList<>(orders.values());
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        List<Order> orders = client.sql(sql).query(Order.class).list();
+        for (Order order : orders) {
+            order.setOrderLines(getOrderLines(order.getId()));
         }
+
+        return orders;
     }
 
-    public boolean deleteOrderById(Long id) {
+    public int deleteOrderById(Long id) {
 
-        String sql = "delete from \"orders\" where id = (?)";
+        String sql = "delete from orders where id = (?)";
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        return client.sql(sql).param(id).update();
 
-            ps.setLong(1, id);
-            int i = ps.executeUpdate();
-            return i > 0;
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
 
-    private void addOrderLine(long id, OrderLine orderLine) {
-        String sql = "insert into \"order_lines\" (order_id, description, price) values (?, ?, ?)";
+    private void insertOrderLine(long orderId, String description, double price) {
 
-        try (Connection conn = dataSource.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "insert into order_lines (order_id, description, price)  values (?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        client.sql(sql)
+                .param(orderId)
+                .param(description)
+                .param(price)
+                .update(keyHolder, "id");
+    }
 
-            ps.setLong(1, id);
-            ps.setString(2, orderLine.getDescription());
-            ps.setDouble(3, orderLine.getPrice());
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-
+    private List<OrderLine> getOrderLines(Long id) {
+        String sql = "select * from order_lines where order_id = ?";
+        return client.sql(sql).param(id).query(OrderLine.class).list();
     }
 
 
