@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%c{5}:%L [%p] %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="ERROR">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+<!--        <Logger name="service"-->
+<!--                level="INFO"-->
+<!--                additivity="false">-->
+
+<!--            <AppenderRef ref="Console"/>-->
+<!--        </Logger>-->
+
+        <Logger name="service.impl.OrderServiceImpl"
+                level="DEBUG"
+                additivity="false">
+
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+    </Loggers>
+</Configuration>

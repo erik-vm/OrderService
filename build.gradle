@@ -10,28 +10,56 @@ repositories {
 def springVersion = '6.1.13'
 def log4jVersion = '2.23.1'
 def lombokVersion = '1.18.34'
-def postgresVersion = '42.7.3'
 def hsqldbVersion = '2.7.3'
+def aspectjWeaverVersion = '1.9.22'
+def hibernateValidatorVersion = '8.0.1.Final'
+def jacksonDataBindVersion = '2.17.0'
+def jacksonDataTypeVersion = '2.17.2'
 
 dependencies {
 
+    implementation group: 'org.springframework',
+            name: 'spring-webmvc',
+            version: springVersion
+
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+
+
+    implementation group: 'jakarta.validation',
+            name: 'jakarta.validation-api',
+            version: '3.1.0'
+
+    implementation group: 'org.hibernate',
+            name: 'hibernate-validator',
+            version: hibernateValidatorVersion
+
+    implementation group: 'org.glassfish',
+            name: 'jakarta.el',
+            version: '4.0.2'
+
+    implementation group: 'com.fasterxml.jackson.core',
+            name: 'jackson-databind',
+            version: jacksonDataBindVersion
+
+    implementation group: 'com.fasterxml.jackson.datatype',
+            name: 'jackson-datatype-jsr310',
+            version: jacksonDataTypeVersion
 
     implementation group: 'com.fasterxml.jackson.core',
             name: 'jackson-databind',
             version: '2.17.0'
 
-    implementation group: 'org.postgresql',
-            name: 'postgresql',
-            version: postgresVersion
+    implementation group: 'org.springframework',
+            name: 'spring-aop',
+            version: springVersion
+
+    implementation group: 'org.aspectj',
+            name: 'aspectjweaver',
+            version: aspectjWeaverVersion
 
     implementation group: 'org.hsqldb',
             name: 'hsqldb',
             version: hsqldbVersion
-
-    implementation group: 'org.apache.commons',
-            name: 'commons-dbcp2',
-            version: '2.12.0'
 
     implementation group: 'org.springframework',
             name: 'spring-context',
