@@ -5,7 +5,7 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
 public class ApplicationInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
     @Override
     protected Class<?>[] getRootConfigClasses() {
-        return new Class[]{Config.class, HsqlDataSource.class};
+        return new Class[]{DbConfig.class, HsqlDataSource.class};
     }
 
     @Override
@@ -15,6 +15,6 @@ public class ApplicationInitializer extends AbstractAnnotationConfigDispatcherSe
 
     @Override
     protected Class<?>[] getServletConfigClasses() {
-        return new Class[]{Config.class};
+        return new Class[]{DbConfig.class};
     }
 }

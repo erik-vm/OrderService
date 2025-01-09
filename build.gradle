@@ -10,11 +10,13 @@ repositories {
 def springVersion = '6.1.13'
 def log4jVersion = '2.23.1'
 def lombokVersion = '1.18.34'
-def hsqldbVersion = '2.7.3'
+def hsqlVersion = '2.7.3'
+def postgresVersion = '42.7.3'
 def aspectjWeaverVersion = '1.9.22'
 def hibernateValidatorVersion = '8.0.1.Final'
 def jacksonDataBindVersion = '2.17.0'
 def jacksonDataTypeVersion = '2.17.2'
+def hibernateVersion = '6.6.1.Final'
 
 dependencies {
 
@@ -32,6 +34,19 @@ dependencies {
     implementation group: 'org.hibernate',
             name: 'hibernate-validator',
             version: hibernateValidatorVersion
+
+
+    implementation group: 'org.hibernate',
+            name: 'hibernate-core',
+            version: hibernateVersion
+
+    implementation group: 'org.postgresql',
+            name: 'postgresql',
+            version: postgresVersion
+
+    implementation group: 'org.hsqldb',
+            name: 'hsqldb',
+            version: hsqlVersion
 
     implementation group: 'org.glassfish',
             name: 'jakarta.el',
@@ -57,9 +72,10 @@ dependencies {
             name: 'aspectjweaver',
             version: aspectjWeaverVersion
 
-    implementation group: 'org.hsqldb',
-            name: 'hsqldb',
-            version: hsqldbVersion
+
+    implementation group: 'org.springframework',
+            name: 'spring-orm',
+            version: springVersion
 
     implementation group: 'org.springframework',
             name: 'spring-context',

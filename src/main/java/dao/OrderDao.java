@@ -1,5 +1,10 @@
 package dao;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
 import model.Order;
 import model.OrderLine;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -13,97 +18,49 @@ import java.util.Objects;
 @Repository
 public class OrderDao {
 
-    private final JdbcClient client;
+    @PersistenceContext
+    private EntityManager em;
 
-    public OrderDao(JdbcClient client) {
-        this.client = client;
-    }
 
+    @Transactional
     public Order insertOrder(Order order) {
-        if (order == null || order.getOrderNumber() == null || order.getOrderLines() == null) {
-            throw new IllegalArgumentException("Order and required fields must not be null");
+
+        double total = 0.0;
+        for (OrderLine ol : order.getOrderLines()) {
+            total += ol.getPrice();
         }
-        try {
-            String sql = "insert into orders (order_number) values ( ?)";
 
-            KeyHolder keyHolder = new GeneratedKeyHolder();
+        order.setTotal(total);
 
-            client.sql(sql)
-                    .param(order.getOrderNumber())
-                    .update(keyHolder, "id");
-
-            long orderId = Objects.requireNonNull(keyHolder.getKey()).longValue();
-
-            double total = 0.0;
-
-            if (!order.getOrderLines().isEmpty()) {
-                for (OrderLine orderLine : order.getOrderLines()) {
-                    String description = orderLine.getDescription();
-                    double price = orderLine.getPrice();
-                    total += price;
-                    insertOrderLine(orderId, description, price);
-                }
-            }
-
-            String updateTotalSql = "UPDATE orders SET total = ? WHERE id = ?";
-            client.sql(updateTotalSql)
-                    .param(total)
-                    .param(orderId)
-                    .update();
-
-            return order.withId(orderId).withTotal(total);
-        } catch (Exception e) {
-            throw new RuntimeException("Inserting new order failed!");
+        if (order.getId() == null) {
+            em.persist(order);
+        } else {
+            em.merge(order);
         }
+        return order;
     }
 
+    @Transactional
     public Order getOrderById(Long id) {
 
-        String sql = "select * from orders where orders.id = ?";
+        TypedQuery<Order> query = em.createQuery("select o from Order o where o.id = :id", Order.class);
+        query.setParameter("id", id);
 
-        Order order = client.sql(sql).param(id).query(Order.class).single();
-
-        order.setOrderLines(getOrderLines(order.getId()));
-
-        return order;
+        return query.getSingleResult();
     }
 
     public List<Order> getAllOrders() {
 
-        String sql = "select * from orders;";
-
-        List<Order> orders = client.sql(sql).query(Order.class).list();
-        for (Order order : orders) {
-            order.setOrderLines(getOrderLines(order.getId()));
-        }
-
-        return orders;
+        return em.createQuery("select  o from Order  o", Order.class).getResultList();
     }
 
-    public int deleteOrderById(Long id) {
+    @Transactional
+    public void deleteOrderById(Long id) {
 
-        String sql = "delete from orders where id = (?)";
-
-        return client.sql(sql).param(id).update();
+        Query query = em.createQuery("delete from Order  o where o.id = :id");
+        query.setParameter("id", id);
+        query.executeUpdate();
 
     }
-
-
-    private void insertOrderLine(long orderId, String description, double price) {
-
-        String sql = "insert into order_lines (order_id, description, price)  values (?, ?, ?)";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        client.sql(sql)
-                .param(orderId)
-                .param(description)
-                .param(price)
-                .update(keyHolder, "id");
-    }
-
-    private List<OrderLine> getOrderLines(Long id) {
-        String sql = "select * from order_lines where order_id = ?";
-        return client.sql(sql).param(id).query(OrderLine.class).list();
-    }
-
 
 }
