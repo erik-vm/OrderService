@@ -5,7 +5,6 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
@@ -21,9 +20,9 @@ import java.util.Properties;
 
 @EnableWebMvc
 @EnableTransactionManagement
-@ComponentScan(basePackages = {"dao", "controller", "service", "validation", "model"})
+@ComponentScan(basePackages = {"dao", "controller", "service", "validation", "model", "config"})
 @PropertySource("classpath:/application.properties")
-public class DbConfig {
+public class MvcConfig {
 
     @Bean
     public EntityManagerFactory entityManagerFactory(

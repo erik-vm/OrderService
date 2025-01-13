@@ -17,9 +17,38 @@ def hibernateValidatorVersion = '8.0.1.Final'
 def jacksonDataBindVersion = '2.17.0'
 def jacksonDataTypeVersion = '2.17.2'
 def hibernateVersion = '6.6.1.Final'
+def jsonWebTokenVersion = '0.12.6'
+def springSecurityVersion = '6.3.4'
+
 
 dependencies {
+    implementation group: 'org.springframework.security',
+            name: 'spring-security-web',
+            version: springSecurityVersion
 
+    implementation group: 'org.springframework.security',
+            name: 'spring-security-config',
+            version: springSecurityVersion
+
+    implementation group: 'org.springframework.security',
+            name: 'spring-security-oauth2-client',
+            version: springSecurityVersion
+
+    implementation group: 'org.springframework.security',
+            name: 'spring-security-oauth2-jose',
+            version: springSecurityVersion
+
+    implementation group: 'io.jsonwebtoken',
+            name: 'jjwt-api',
+            version: jsonWebTokenVersion
+
+    implementation group: 'io.jsonwebtoken',
+            name: 'jjwt-impl',
+            version: jsonWebTokenVersion
+
+    implementation group: 'io.jsonwebtoken',
+            name: 'jjwt-jackson',
+            version: jsonWebTokenVersion
     implementation group: 'org.springframework',
             name: 'spring-webmvc',
             version: springVersion
